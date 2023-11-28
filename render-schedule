@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
 
 import sys, argparse, json
+from datetime import datetime, timedelta
+
+def parse_date(date):
+  '''Returns a datetime object given a string.'''
+  return datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
+
+def print_date(date):
+  '''Returns a string given a datetime object.'''
+  return datetime.strftime(date, "%Y-%m-%dT%H:%M:%SZ")
 
 def parse_args():
+  '''Parses command line arguments.'''
   parser = argparse.ArgumentParser(
             prog='incident.io Scheduler',
             description='Creates a schedule based on exceptions')
@@ -10,24 +20,205 @@ def parse_args():
   parser.add_argument('--overrides')
   parser.add_argument('--fromDate')
   parser.add_argument('--untilDate')
+  parser.add_argument('--testfile')
   return parser.parse_args()
 
 def parse_schedule(fname):
+  '''Returns the json contents of fname.'''
   try:
     with open(fname) as f:
       return json.load(f)
   except OSError:
-    print("Could not open/read file:", fname)
+    print("ERROR: Unable to open/read file:", fname)
     sys.exit()
   
 def parse_overrides(fname):
+  '''Returns the json contents of fname.'''
+  # Check if no override file is passed
+  if fname == None:
+    return None
+  
   try:
     with open(fname) as f:
-      return json.load(f)
+      overrides = json.load(f)
+      # Format json strings -> datetime
+      for override in overrides:
+        override['start_at'] = parse_date(override['start_at'])
+        override['end_at'] = parse_date(override['end_at'])
+      return overrides
   except OSError:
     return None
 
+def apply_overrides(shifts, overrides):
+  '''Returns a list of shifts with overrides added'''
+  # Ensure overrides are chronologically sorted
+  overrides = sorted(overrides, key=lambda o: o['start_at'])
+  
+  s_index = 0
+  o_index = 0
+  overriden_shifts = []
+  # Merge overrides with scheduled shifts
+  while s_index < len(shifts):
+    shift = shifts[s_index]
+    
+    # Append all shifts to end if there are no more overrides
+    if o_index >= len(overrides):
+      overriden_shifts.append(shift)
+      s_index += 1
+      continue
+  
+    override = overrides[o_index]
+
+    if shift['end_at'] <= override['start_at']:
+      # No overlap
+      overriden_shifts.append(shift)
+      s_index += 1
+    elif shift['start_at'] >= override['end_at']:
+      # No overlap
+      overriden_shifts.append(override)
+      o_index += 1
+    elif shift['start_at'] >= override['start_at'] and shift['end_at'] <= override['end_at']:
+      # Shift completely overriden
+      s_index += 1
+    elif shift['end_at'] <= override['end_at']:
+      # Override starts midway through override
+      shift['end_at'] = override['start_at']
+      overriden_shifts.append(shift)
+      s_index += 1
+    elif shift['start_at'] >= override['start_at']:
+      # Shift starts midway through override
+      shift['start_at'] = override['end_at']
+      overriden_shifts.append(override)
+      o_index += 1
+    else:
+      # Override starts and finishes mid shift
+      shift1 = shift.copy()
+      shift2 = shift.copy()
+      shift1['end_at'] = override['start_at']
+      shift2['start_at'] = override['end_at']
+      
+      overriden_shifts.append(shift1)
+      overriden_shifts.append(override)
+      overriden_shifts.append(shift2)
+      s_index += 1
+      o_index += 1
+  
+  # Add remaining override if any
+  if (o_index < len(overrides)):
+    overriden_shifts.append(overrides[o_index])
+
+  return overriden_shifts
+
+def calc_shifts(schedule, overrides, fromDate, untilDate):
+  '''Returns a truncated list of shifts.'''
+  start_at = parse_date(schedule['handover_start_at'])
+  if fromDate == None:
+    fromDate = start_at
+  
+  interval = timedelta(days=schedule['handover_interval_days'])
+  users = schedule['users']
+
+  shifts = []
+  shiftIndex = 0
+  # Apply schedule logic to get list of shifts
+  while start_at < untilDate:
+    end_at = start_at + interval
+    
+    # Loop until we are close to fromDate
+    if end_at < fromDate:
+      start_at = end_at
+      continue
+
+    shifts.append({
+      'user': users[shiftIndex % len(users)],
+      'start_at': start_at,
+      'end_at': end_at
+    })
+
+    start_at = end_at
+    shiftIndex += 1
+
+  if overrides != None:
+    shifts = apply_overrides(shifts, overrides)
+    
+  # Truncate if necessary
+  for shift in shifts:
+    # We know shifts are in order so can break as soon as dates are valid
+    if shift['end_at'] <= fromDate:
+      shifts.remove(shift)
+    elif shift['start_at'] < fromDate:
+      shift['start_at'] = fromDate
+      break
+    else:
+      break
+
+  # TODO: There will be a more efficient way to do this
+  for shift in reversed(shifts):
+    if shift['start_at'] >= untilDate:
+      shifts.remove(shift)
+    elif shift['end_at'] > untilDate:
+      shift['end_at'] = untilDate
+      break
+    else:
+      break
+
+  # Convert all datetime objects to strings for output
+  for shift in shifts:
+    shift['start_at'] = print_date(shift['start_at'])
+    shift['end_at'] = print_date(shift['end_at'])
+  
+  return shifts
+
+def test():
+  '''Runs the test json file and returns the outcome of the test.'''
+  try:
+    # Load test file
+    f = open(args.testfile)
+    test = json.load(f)
+    f.close()
+
+    # Parse json -> date as required by calc_shifts
+    for override in test['overrides']:
+      override['start_at'] = parse_date(override['start_at'])
+      override['end_at'] = parse_date(override['end_at'])
+    
+    shifts = calc_shifts(
+                test['schedule'], 
+                test['overrides'],
+                parse_date(test['from']),
+                parse_date(test['until'])
+              )
+    
+    if shifts == test['expected']:
+      print("> Test Success:", args.testfile)
+    else:
+      print("Got:")
+      print(shifts)
+      print("-------------------\nExpected:")
+      print(test['expected'])
+      print("> Test Fail:", args.testfile)
+  except OSError:
+    print("ERROR: Unable to open test file")
+
 if __name__ == "__main__":
   args = parse_args()
+
+  # Run test if --testfile passed
+  if args.testfile != None:
+    test()
+    exit()
+  
+  # Check correct args are supplied
+  if args.schedule == None or args.untilDate == None:
+    print("ERROR: --schedule and --until arguments are both required")
+    exit(1)
+  
   schedule = parse_schedule(args.schedule)
   overrides = parse_overrides(args.overrides)
+  shifts = calc_shifts(
+              schedule, 
+              overrides,
+              parse_date(args.fromDate),
+              parse_date(args.untilDate)
+            )
+  print(shifts)
