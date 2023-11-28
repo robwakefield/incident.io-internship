@@ -1,0 +1,13 @@
+{ "schedule": {
+    "users": [
+      "1", "2"
+    ],
+
+    "handover_start_at": "2001-01-01T00:00:00Z",
+    "handover_interval_days": 1
+  },
+  "overrides": [],
+  "from": "1999-01-01T00:00:00Z",
+  "until": "1999-01-02T00:00:00Z",
+  "expected": []
+}
