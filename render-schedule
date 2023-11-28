@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
 
+import argparse
+
+def parse_args():
+  parser = argparse.ArgumentParser(
+            prog='incident.io Scheduler',
+            description='Creates a schedule based on exceptions')
+  parser.add_argument('--schedule')
+  parser.add_argument('--overrides')
+  parser.add_argument('--fromDate')
+  parser.add_argument('--untilDate')
+  return parser.parse_args()
+
 if __name__ == "__main__":
-  exit()
+  args = parse_args()
