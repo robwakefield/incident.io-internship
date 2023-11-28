@@ -19,7 +19,15 @@ def parse_schedule(fname):
   except OSError:
     print("Could not open/read file:", fname)
     sys.exit()
+  
+def parse_overrides(fname):
+  try:
+    with open(fname) as f:
+      return json.load(f)
+  except OSError:
+    return None
 
 if __name__ == "__main__":
   args = parse_args()
   schedule = parse_schedule(args.schedule)
+  overrides = parse_overrides(args.overrides)
