@@ -18,7 +18,9 @@ The command line arguments are first parsed along with the input files. This giv
 
 ## Testing
 
-In order to help when adding new features and to ensure that the script is working as expeced, a test file containing the JSON attributes 'schedule', 'overrides', 'from', 'until' and 'expected' can be passed using the flag `--testfile`. The necessary atrributes are passed to the calc_shifts function and the output is compared with the the expected ouput defined in the JSON test file. This was useful when implementing the different relations between shifts and overrides as there were many different ways that the overrides could interact with a schedule and using test cases for each permutation meant that it was easy to see if the implementation was correct.
+In order to help when adding new features and to ensure that the script is working as expeced, a test file containing the JSON attributes 'schedule', 'overrides', 'from', 'until' and 'expected' can be passed using the flag `--testfile`. The necessary atrributes are passed to the calc_shifts function and the output is compared with the the expected ouput defined in the JSON test file.
+
+This was useful when implementing the different relations between shifts and overrides as there were many different ways that the overrides could interact with a schedule and using test cases for each permutation meant that it was easy to see if the implementation was correct.
 
 A single test can be run as `render-schedule --testfile=test/truncate.json`
 
