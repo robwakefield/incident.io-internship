@@ -19,7 +19,7 @@ In order to help when adding new features and to ensure that the script is worki
 
 A single test can be run as `render-schedule --testfile=test/truncate.json`
 
-A helper bash script is provided that will run all of the test cases in the test/ directory `./runtests.sh`
+A helper bash script is provided that will run all of the test cases in the test/ directory `./runtests`
 
 # Future Product Features
 
