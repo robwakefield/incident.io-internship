@@ -1,208 +1,29 @@
-# Internships
-
-[job-ad]: https://boards.eu.greenhouse.io/incidentio/jobs/4248134101
-
-incident.io has an internship programme for student engineers who want to gain
-work experience over a 6 month placement.
-
-You can apply [here][job-ad] or read about the role below.
-
-## What is the role?
-
-This placement is for a Product Engineer role: [watch this
-video](https://youtu.be/I7i8WabFHcY) to see how it differs from other roles.
-
-We're looking for candidates that:
-
-- Want to work in a fast-paced engineering team in one of London's fastest
-  growing start-ups.
-- Love the idea of working closely with customers to build a product used daily
-  to respond to critical incidents.
-- Are excited by the opportunity to build software used by some of the most
-  recognisable names in tech: Etsy, Skyscanner, Vercel, Linear and more that we
-  can't share yet!
-
-Do not apply if:
-
-- You're looking for an 'intern' project: this placement will have you doing
-  real work and we'll make little distinction between an intern and a fulltime
-  engineering hire.
-- You don't enjoy learning new technologies by 'doing': we expect engineers to
-  get involved building and learn as they go (most have learned Go while on the
-  job, as an example).
-- You prefer to work solo: we're highly collaborative and all your work will
-  happen as part of a team.
-
-## Application process
-
-Please apply via our [Product Engineer Intern][job-ad] job posting. When
-applying, include a CV detailing education and past experience and a cover
-letter that explains why incident.io is particularly exciting to you.
-
-We care more about the cover letter than the CV, so think carefully about why
-this role is something you would do well in! Make sure to read [What is this
-role?](#what-is-this-role) as we're looking for reasons you would be a good
-match against that description.
-
-> Pro-tip: you can get a sense of engineering at incident.io by reading our
-> [engineering blog](https://incident.io/blog/engineering).
-
-The full candidate process will be:
-
-1. Apply with cover letter.
-2. If accepted, we'll ask you to provide either:
-    - Existing product you're proud of.
-    - Solution to our take home test.
-3. If successful, we'll invite you for an on-site interview on the 5th December
-   2023.
-
-Please apply via the [job link][job-ad] and we'll share everything you need to
-know, but for more detail on step (2) read below:
-
-## 1. Existing project you're proud of
-
-Have you built something you're proud of, or think showcases skills that would
-be valuable for this role?
-
-If so, we invite you to submit this project in leiu of a take-home challenge.
-
-An ideal project would:
-
-- Be a software project that solves a real problem.
-- Demonstrate your ability to build high-quality software.
-- Provide enough context (often through a README) that would allow anyone
-  grading your code to get setup and run it.
-
-We'll only accept submissions where you are the primary contributor to the
-project: group projects are great but become extremely difficult to evaluate
-fairly!
-
-## 2. Complete our take-home challenge
-
-Instead, you could try solving the following code challenge.
-
-### Intro
-
-Imagine you're working at incident.io and we're building a product that can page
-(call them, send an SMS, send a notification to a mobile app, etc) engineers
-when their services are involved in an incident.
-
-When configuring an on-call system, you don't want to say "whenever service X
-goes down, page Y person" as that person probably has a social life and won't
-appreciate receiving all the pages, all the time.
-
-Instead, you want to build schedules: a set of people who take it in turns to
-provide cover for a service by rotating through on-call shifts.
-
-In JSON form, the configuration that describes how a schedule behaves might look
-like this:
-
-```js
-// This is a schedule.
-{
-  "users": [
-    "alice",
-    "bob",
-    "charlie"
-  ],
-
-  // 5pm, Friday 17th November 2023
-  "handover_start_at": "2023-11-17T17:00:00Z",
-  "handover_interval_days": 7
-}
-```
-
-In that example, our schedule will rotate evenly between those users with the
-first shift starting at 5pm Friday 17th, with shift changes happening every 7
-days.
-
-That means:
-
-- Alice takes the shift for 1 week, starting at 5pm, Friday 17th November
-- Then Bob is on-call for 1 week from 5pm, Friday 24th November
-- Then Charlie, then...
-- Back to Alice again.
-
-Visually, this might look like this:
-
-![Schedule](./schedule.png)
-
-Schedule systems often support 'overrides' where you can add temporary shift
-modifications to a schedule, such as if someone wants to go walk their dog or go
-to the cinema.
-
-An override specifies the person that will take the shift and the time period it
-covers. An example of Charlie covering 5pm-10pm on Monday 20th November would
-look like this:
-
-```js
-// This is an override.
-{
-  // Charlie will cover this shift
-  "user": "charlie",
-  // 5pm, Monday 20th November 2023
-  "start_at": "2023-11-20T17:00:00Z",
-  // 10pm, Monday 20th November 2023
-  "end_at": "2023-11-20T17:00:00Z"
-}
-```
-
-### Task
-
-We would like you to build – in any language you choose, but ideally one you are
-very comfortable in – a script called `./render-schedule` that implements a
-scheduling algorithm.
-
-It should be run like so:
-
-```console
-$ ./render-schedule \
-    --schedule=schedule.json \
-    --overrides=overrides.json \
-    --from='2023-11-17T17:00:00Z' \
-    --until='2023-12-01T17:00:00Z'
-[
-  {
-    "user": "alice",
-    "start_at": "2023-11-20T17:00:00Z",
-    "end_at": "2023-11-20T17:00:00Z"
-  },
-  {
-    "user": "bob",
-    "start_at": "2023-11-20T17:00:00Z",
-    "end_at": "2023-12-01T17:00:00Z"
-  }
-]
-```
+# Running the Code
+To run the code, ensure you have python (v3.10+) installed and run the command `./render-schedule [--schedule, --overrides, --until, --from, --testfile]`.
+There are no extra python libraries required to be installed.
 
 Where:
-
-- `--schedule` JSON file containing a definition of a schedule (see above example)
-- `--overrides` JSON file containing an array of overrides (see above example)
+- `--schedule` JSON file containing a definition of a schedule
+- `--overrides` JSON file containing an array of overrides
 - `--from` the time from which to start listing entries
 - `--until` the time until which to listing entries
+- `--testfile` JSON file containing a schedule and override combination to test (see test/ for examples)
 
-The script should output a JSON array of final schedule as a list of entries.
-This should take into account the projected entries (based on the handover
-information in the schedule) alongside the provided overrides.
+# Code Structure / Implementation
 
-Your schedule should also be truncated based on the from/until parameters
-provided. For example, if an entry was from 1pm November 17 -> 1pm November
-19th, but from was 2pm November 18th, the entry should be returned as 2pm
-November 18th -> 1pm November 19th (ignoring the part of the entry that is
-outside the provided range).
+The command line arguments are first parsed along with the input files. This gives us a clean JSON structure to perform operations on. The first thing that the code does is calculate the schedule as a list of shifts that fall closely around the from and until dates. We then apply the overrides on top of this schedule by peforming operations on a case-wise basis in a merge sort style by comparing the next shift and override that is not yet in the final (overriden) schedule. After this we have a correctly overwritten list of shifts that we need to truncate in order to fit the from/until constraint. Finally this is printed to the output.
 
-Entries should be truncated to match the from/until parameters.
+## Testing
 
-### Code submission
+In order to help when adding new features and to ensure that the script is working as expeced, a test file containing the JSON attributes 'schedule', 'overrides', 'from', 'until' and 'expected' can be passed using the flag `--testfile`. The necessary atrributes are passed to the calc_shifts function and the output is compared with the the expected ouput defined in the JSON test file. This was useful when implementing the different relations between shifts and overrides as there were many different ways that the overrides could interact with a schedule and using test cases for each permutation meant that it was easy to see if the implementation was correct.
 
-Once we've reviewed your CV, we'll send you instructions on where to send your
-solution. We'll expect a ZIP file containing the code, plus a `README.md` that
-includes:
+A single test can be run as `render-schedule --testfile=test/truncate.json`
 
-- Instructions on running your code, including installation of dependencies.
-- Comments on code structure/how you approached the problem you think may be
-  useful.
-- Having now built the scheduler, any thoughts you have on the product features
-  you might build on top of this (if you think how we'd use this at incident.io,
-  for example).
+A helper bash script is provided that will run all of the test cases in the test/ directory `./runtests.sh`
+
+# Future Product Features
+
+As it stands, the program outputting a JSON list is not very useful. I would want to implement a GUI to display the schedule in a clear way. This would probably be best done using a web app such a React app as it can be quickly and easily set up. The JSON output would make it easy to parse the schedule and plot it on a timeline. It would be a good idea to make this available to each user in the schedule so they could check when they are next scheduled to work. There could also be a way to add an override in the web app and update the schedule to reflect this.
+
+Another feature that would be useful would be to implement some logic that automatically notified the correct person (based on the schedule) when there is a problem that they need to address. A database of on-call staff's names/usernames linked to their emails could be used as a lookup table that forwarded the problem notification to their inbox. A priority system implemented at the problem notification level could make use of phone calls if the priority of the problem is high enough. Either way we would use the schedule as a way to find out who was on-call at the time.
+
